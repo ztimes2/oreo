@@ -2,40 +2,82 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/sirupsen/logrus"
 )
 
-type handler struct {
-	ti *tokenIssuer
+func newRouter() http.Handler {
+	r := chi.NewRouter()
+
+	r.Use(
+		middleware.RequestLogger(&middleware.DefaultLogFormatter{
+			Logger: logrus.StandardLogger(),
+		}),
+		middleware.Recoverer,
+	)
+
+	r.Post("/signin", handleSignIn)
+	r.Post("/refresh", handleRefresh)
+	r.Post("/verify", handleVerify)
+
+	return r
 }
 
-func (h *handler) handleVerify(w http.ResponseWriter, r *http.Request) {
-	// TODO read access token either from cookie or header
-	
-	// TODO verify access token
+func handleVerify(w http.ResponseWriter, r *http.Request) {
+	at := readAccessToken(r)
 
-	// TODO respond with error if access token is not valid
+	claims, err := parseAndVerifyToken(at)
+	if err != nil || claims.TokenType != tokenTypeBearer {
+		logrus.Errorf("invalid access token: %v", err)
+		writeError(w, http.StatusUnauthorized, errorResponse{
+			Description: "Authentication required.",
+		})
+		return
+	}
 
-	// TODO respond with success if access token is valid
+	writeJSON(w, http.StatusNoContent, nil)
 }
 
-func (h *handler) handleSignIn(w http.ResponseWriter, r *http.Request) {
-	// TODO read username and password from body
+func handleSignIn(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	username := r.PostFormValue("username")
+	password := r.PostFormValue("password")
 
-	// TODO verify username and password
+	if !areCredentialsValid(username, password) {
+		writeError(w, http.StatusBadRequest, errorResponse{
+			Description: "Invalid username or password.",
+		})
+		return
+	}
 
-	// TODO respond with error if credentials are not valid
+	at, rt, err := issueTokens(username)
+	if err != nil {
+		writeUnexpectedError(w, err)
+		return
+	}
 
-	// TODO generate access and refresh tokens, and respond with them if credentials
-	// are valid
+	writeTokens(w, at, rt)
 }
 
-func (h *handler) handleRefresh(w http.ResponseWriter, r *http.Request) {
-	// TODO read refresh token from body
-	
-	// TODO verify refresh token
+func handleRefresh(w http.ResponseWriter, r *http.Request) {
+	refreshToken := readRefreshToken(r)
 
-	// TODO respond with error if refresh token is not valid
+	claims, err := parseAndVerifyToken(refreshToken)
+	if err != nil || claims.TokenType != tokenTypeRefresh {
+		logrus.Errorf("invalid refresh token: %v", err)
+		writeError(w, http.StatusBadRequest, errorResponse{
+			Description: "Invalid refresh token.",
+		})
+		return
+	}
 
-	// TODO generate access and refresh tokens, and respond with them if refresh
-	// token is valid
+	at, rt, err := issueTokens(claims.Subject)
+	if err != nil {
+		writeUnexpectedError(w, err)
+		return
+	}
+
+	writeTokens(w, at, rt)
 }

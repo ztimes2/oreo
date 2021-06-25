@@ -1,49 +1,84 @@
 package main
 
-type tokenIssuer struct {
-	refreshTokens map[string]struct{}
-	secret string
+import (
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
+)
+
+const (
+	defaultUsername = "user"
+	defaultPassword = "supersecurepassword"
+
+	defaultTokenSecret = "supersecuresecret"
+	defaultTokenIssuer = "oreo"
+
+	tokenTypeBearer  = "Bearer"
+	tokenTypeRefresh = "Refresh"
+)
+
+func areCredentialsValid(username, password string) bool {
+	return username == defaultUsername && password == defaultPassword
 }
 
-func newTokenIssuer(secret string) *tokenIssuer {
-	return &tokenIssuer{
-		refreshTokens: make(map[string]struct{}),
-		secret: secret,
+type tokenClaims struct {
+	jwt.StandardClaims
+	TokenType string `json:"typ"`
+}
+
+type token struct {
+	value     string
+	expiresAt time.Time
+}
+
+func issueTokens(username string) (accessToken, refreshToken token, err error) {
+	now := time.Now()
+
+	accessToken.expiresAt = now.Add(1 * time.Minute)
+
+	accessToken.value, err = jwt.
+		NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
+			StandardClaims: jwt.StandardClaims{
+				Subject:   username,
+				Issuer:    defaultTokenIssuer,
+				IssuedAt:  now.Unix(),
+				ExpiresAt: accessToken.expiresAt.Unix(),
+			},
+			TokenType: tokenTypeBearer,
+		}).
+		SignedString([]byte(defaultTokenSecret))
+	if err != nil {
+		return token{}, token{}, err
 	}
+
+	refreshToken.expiresAt = now.Add(10 * time.Minute)
+
+	refreshToken.value, err = jwt.
+		NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
+			StandardClaims: jwt.StandardClaims{
+				Subject:   username,
+				Issuer:    defaultTokenIssuer,
+				IssuedAt:  now.Unix(),
+				ExpiresAt: refreshToken.expiresAt.Unix(),
+			},
+			TokenType: tokenTypeRefresh,
+		}).
+		SignedString([]byte(defaultTokenSecret))
+	if err != nil {
+		return token{}, token{}, err
+	}
+
+	return accessToken, refreshToken, nil
 }
 
-func (ti *tokenIssuer) parse(token string) (*jwt.Token , error) {
-	return nil, errors.New("not implemented")
-}
+func parseAndVerifyToken(t string) (tokenClaims, error) {
+	var claims tokenClaims
 
-func (ti *tokenIssuer) issue(username string) (*oauth2.Token, error) {
-	// TODO generate access token as jwt with:
-	//  - the given username as subject
-	//  - 1 minute expiry duration
-	//  - the given secret as signature
-	
-	// TODO generate refresh token as jwt with:
-	//  - the given username as subject
-	//  - 10 minute expiry duration
-	//  - the given secret as signature
+	if _, err := jwt.ParseWithClaims(t, &claims, func(t *jwt.Token) (interface{}, error) {
+		return []byte(defaultTokenSecret), nil
+	}); err != nil {
+		return tokenClaims{}, err
+	}
 
-	// TODO store refresh token in the map
-
-	// TODO return tokens
-	return nil, errors.New("not implemented")
-}
-
-func (ti *tokenIssuer) refresh(token string) (*oauth2.Token, error) {
-	// TODO parse the given token
-	
-	// TODO validate the token
-	
-	// TODO lookup the token in the map 
-
-	// TODO if token is invalid or not found in the map, then return error 
-
-	// TODO if token is valid and found in the map, issue and return new tokens
-
-	// TODO invalidate the incoming token by removing it from the map
-	return nil, errors.New("not implemented")
+	return claims, nil
 }
