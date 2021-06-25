@@ -10,15 +10,21 @@ function signIn() {
     req.open("POST", apiURL + "/signin");
     req.setRequestHeader(headerContentType, contentTypePostForm);
     req.onload = function () {
-        alert("✅ Signed in!");
+        switch (req.status) {
+            case 200:
+                alert("✅ Signed in!");
+                break;
+            case 400:
+            case 500:
+                var resp = JSON.parse(req.responseText);
+                alert("🚫" + resp.err_description);
+                break;
+            default:
+                alert("🚫 "+req.statusText+" "+req.responseText);
+        }
     }
     req.onerror = function () {
-        if (req.status == 400 || req.status == 500) {
-            var resp = JSON.parse(req.responseText);
-            alert("🚫" + resp.err_description);
-        } else {
-            alert("🚫" + req.status, req.responseText);
-        }
+        alert("🚫 Couldn't reach the API server.");
     }
     req.send(encodeURI("username=" + username + "&password=" + password));
 }
@@ -27,16 +33,20 @@ function verify() {
     var req = new XMLHttpRequest();
     req.open("POST", apiURL + "/verify");
     req.onload = function () {
-        alert("✅ Authenticated!");
+        switch (req.status) {
+            case 204:
+                alert("✅ Authenticated!");
+                break;
+            case 401:
+                var resp = JSON.parse(req.responseText);
+                alert("🚫" + resp.err_description);
+                break;
+            default:
+                alert("🚫 "+req.statusText+" "+req.responseText);
+        }
     }
     req.onerror = function () {
-        if (req.status == 401) {
-            var resp = JSON.parse(req.responseText);
-            alert("🚫" + resp.err_description);
-            refresh();
-        } else {
-            alert("🚫" + req.status, req.responseText);
-        }
+        alert("🚫 Couldn't reach the API server.");
     }
     req.send();
 }
@@ -45,16 +55,21 @@ function refresh() {
     var req = new XMLHttpRequest();
     req.open("POST", apiURL + "/refresh");
     req.onload = function () {
-        alert("✅ Token refreshed!");
-        verify();
+        switch (req.status) {
+            case 200:
+                alert("✅ Token refreshed!");
+                break;
+            case 400:
+            case 500:
+                var resp = JSON.parse(req.responseText);
+                alert("🚫" + resp.err_description);
+                break;
+            default:
+                alert("🚫 "+req.statusText+" "+req.responseText);
+        }
     }
     req.onerror = function () {
-        if (req.status == 401) {
-            var resp = JSON.parse(req.responseText);
-            alert("🚫" + resp.err_description);
-        } else {
-            alert("🚫" + req.status, req.responseText);
-        }
+        alert("🚫 Couldn't reach the API server.");
     }
     req.send();
 }
