@@ -64,16 +64,18 @@ func writeTokens(w http.ResponseWriter, accessToken, refreshToken token) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     cookieNameAccessToken,
 		Value:    accessToken.value,
-		MaxAge:   int(accessToken.expiresAt.Sub(now).Milliseconds()),
+		MaxAge:   int(accessToken.expiresAt.Sub(now).Seconds()),
 		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 	})
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     cookieNameRefreshToken,
 		Value:    refreshToken.value,
-		MaxAge:   int(refreshToken.expiresAt.Sub(now).Milliseconds()),
+		MaxAge:   int(refreshToken.expiresAt.Sub(now).Seconds()),
 		HttpOnly: true,
 		Path:     "/refresh",
+		SameSite: http.SameSiteStrictMode,
 	})
 
 	writeJSON(w, http.StatusOK, oauth2.Token{
