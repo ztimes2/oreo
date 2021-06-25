@@ -22,6 +22,7 @@ func main() {
 			Logger: logrus.StandardLogger(),
 		}),
 		middleware.Recoverer,
+		middleware.SetHeader(headerAccessControlAllowOrigin, "*"),
 	)
 	r.Post("/signin", handleSignIn)
 	r.Post("/refresh", handleRefresh)

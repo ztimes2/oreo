@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	headerContentType   = "Content-Type"
-	headerAuthorization = "Authorization"
+	headerContentType              = "Content-Type"
+	headerAuthorization            = "Authorization"
+	headerAccessControlAllowOrigin = "Access-Control-Allow-Origin"
 
 	contentTypeJSON = "application/json"
 
