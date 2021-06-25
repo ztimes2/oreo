@@ -1,4 +1,4 @@
-const apiURL = "http://localhost:8080"
+const apiURL = "http://api.oreo.test"
 const headerContentType = "Content-Type"
 const contentTypePostForm = "application/x-www-form-urlencoded"
 
