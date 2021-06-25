@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	addr := ":8081"
+	addr := ":8080"
 
 	logrus.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp: true,
