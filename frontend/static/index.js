@@ -17,7 +17,7 @@ function signIn() {
             case 400:
             case 500:
                 var resp = JSON.parse(req.responseText);
-                alert("🚫" + resp.err_description);
+                alert("🚫 " + resp.err_description);
                 break;
             default:
                 alert("🚫 "+req.statusText+" "+req.responseText);
@@ -39,7 +39,7 @@ function verify() {
                 break;
             case 401:
                 var resp = JSON.parse(req.responseText);
-                alert("🚫" + resp.err_description);
+                alert("🚫 " + resp.err_description);
                 break;
             default:
                 alert("🚫 "+req.statusText+" "+req.responseText);
@@ -62,7 +62,7 @@ function refresh() {
             case 400:
             case 500:
                 var resp = JSON.parse(req.responseText);
-                alert("🚫" + resp.err_description);
+                alert("🚫 " + resp.err_description);
                 break;
             default:
                 alert("🚫 "+req.statusText+" "+req.responseText);
