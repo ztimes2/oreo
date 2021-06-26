@@ -3,15 +3,16 @@
 
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self'">
     <title>🍪 Oreo</title>
-    <script src="index.js"></script>
 </head>
 
 <body>
     <h1>Hello from Oreo! 🍪👋</h1>
-    <button onclick="signIn()">Sign In</button>
-    <button onclick="verify()">Verify</button>
-    <button onclick="refresh()">Refresh</button>
+    <button id="button-sign-in">Sign In</button>
+    <button id="button-verify">Verify</button>
+    <button id="button-refresh">Refresh</button>
+    <script src="index.js"></script>
 </body>
 
 </html>

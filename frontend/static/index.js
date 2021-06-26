@@ -1,16 +1,20 @@
-const apiURL = "http://api.oreo.test"
+const apiBaseURL = "http://api.oreo.test"
 const headerContentType = "Content-Type"
 const headerAuthorization = "Authorization"
 const contentTypePostForm = "application/x-www-form-urlencoded"
 const localStorageKeyAccessToken = "at"
 const localStorageKeyRefreshToken = "rt"
 
-function signIn() {
+var buttonSignIn = document.getElementById("button-sign-in");
+var buttonVerify = document.getElementById("button-verify");
+var buttonRefresh = document.getElementById("button-refresh");
+
+buttonSignIn.onclick = function() {
     var username = prompt("Username");
     var password = prompt("Password");
 
     var req = new XMLHttpRequest();
-    req.open("POST", apiURL + "/signin");
+    req.open("POST", apiBaseURL + "/signin");
     req.setRequestHeader(headerContentType, contentTypePostForm);
     req.onload = function () {
         switch (req.status) {
@@ -34,9 +38,9 @@ function signIn() {
     req.send(encodeURI("username=" + username + "&password=" + password));
 }
 
-function verify() {
+buttonVerify.onclick = function() {
     var req = new XMLHttpRequest();
-    req.open("POST", apiURL + "/verify");
+    req.open("POST", apiBaseURL + "/verify");
     req.setRequestHeader(headerAuthorization, "Bearer "+getAccessToken());
     req.onload = function () {
         switch (req.status) {
@@ -57,9 +61,9 @@ function verify() {
     req.send();
 }
 
-function refresh() {
+buttonRefresh.onclick = function() {
     var req = new XMLHttpRequest();
-    req.open("POST", apiURL + "/refresh");
+    req.open("POST", apiBaseURL + "/refresh");
     req.setRequestHeader(headerContentType, contentTypePostForm);
     req.onload = function () {
         switch (req.status) {
@@ -94,4 +98,4 @@ function getAccessToken() {
 
 function getRefreshToken() {
     return window.localStorage.getItem(localStorageKeyRefreshToken);
-} 
+}
