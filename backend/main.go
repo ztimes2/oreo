@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,11 +19,11 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(
+		cors.AllowAll().Handler,
 		middleware.RequestLogger(&middleware.DefaultLogFormatter{
 			Logger: logrus.StandardLogger(),
 		}),
 		middleware.Recoverer,
-		middleware.SetHeader(headerAccessControlAllowOrigin, "*"),
 	)
 	r.Post("/signin", handleSignIn)
 	r.Post("/refresh", handleRefresh)

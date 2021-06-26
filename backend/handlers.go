@@ -2,16 +2,19 @@ package main
 
 import (
 	"net/http"
-
-	"github.com/sirupsen/logrus"
 )
 
 func handleVerify(w http.ResponseWriter, r *http.Request) {
 	at := readAccessToken(r)
+	if at == "" {
+		writeError(w, http.StatusUnauthorized, errorResponse{
+			Description: "Authentication required.",
+		})
+		return
+	}
 
 	claims, err := parseAndVerifyToken(at)
 	if err != nil || claims.TokenType != tokenTypeBearer {
-		logrus.Errorf("invalid access token: %v", err)
 		writeError(w, http.StatusUnauthorized, errorResponse{
 			Description: "Authentication required.",
 		})
@@ -43,11 +46,16 @@ func handleSignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRefresh(w http.ResponseWriter, r *http.Request) {
-	refreshToken := readRefreshToken(r)
+	t := readRefreshToken(r)
+	if t == "" {
+		writeError(w, http.StatusUnauthorized, errorResponse{
+			Description: "Invalid refresh token.",
+		})
+		return
+	}
 
-	claims, err := parseAndVerifyToken(refreshToken)
+	claims, err := parseAndVerifyToken(t)
 	if err != nil || claims.TokenType != tokenTypeRefresh {
-		logrus.Errorf("invalid refresh token: %v", err)
 		writeError(w, http.StatusBadRequest, errorResponse{
 			Description: "Invalid refresh token.",
 		})

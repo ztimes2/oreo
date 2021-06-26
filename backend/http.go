@@ -4,21 +4,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
 const (
-	headerContentType              = "Content-Type"
-	headerAuthorization            = "Authorization"
-	headerAccessControlAllowOrigin = "Access-Control-Allow-Origin"
+	headerContentType   = "Content-Type"
+	headerAuthorization = "Authorization"
 
 	contentTypeJSON = "application/json"
-
-	cookieNameAccessToken  = "at"
-	cookieNameRefreshToken = "rt"
 )
 
 func writeJSON(w http.ResponseWriter, statusCode int, resp interface{}) {
@@ -59,25 +54,6 @@ func writeError(w http.ResponseWriter, statusCode int, e errorResponse) {
 }
 
 func writeTokens(w http.ResponseWriter, accessToken, refreshToken token) {
-	now := time.Now()
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     cookieNameAccessToken,
-		Value:    accessToken.value,
-		MaxAge:   int(accessToken.expiresAt.Sub(now).Seconds()),
-		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
-	})
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     cookieNameRefreshToken,
-		Value:    refreshToken.value,
-		MaxAge:   int(refreshToken.expiresAt.Sub(now).Seconds()),
-		HttpOnly: true,
-		Path:     "/refresh",
-		SameSite: http.SameSiteStrictMode,
-	})
-
 	writeJSON(w, http.StatusOK, oauth2.Token{
 		AccessToken:  accessToken.value,
 		Expiry:       accessToken.expiresAt,
@@ -87,29 +63,17 @@ func writeTokens(w http.ResponseWriter, accessToken, refreshToken token) {
 }
 
 func readAccessToken(r *http.Request) string {
-	c, err := r.Cookie(cookieNameAccessToken)
-	if err == nil {
-		return c.Value
-	}
-
 	h := r.Header.Get(headerAuthorization)
 	segments := strings.Split(h, " ")
 	if len(segments) == 2 && segments[0] == tokenTypeBearer {
 		return segments[1]
 	}
-
 	return ""
 }
 
 func readRefreshToken(r *http.Request) string {
-	c, err := r.Cookie(cookieNameRefreshToken)
-	if err == nil {
-		return c.Value
-	}
-
 	if r.PostForm == nil {
 		r.ParseForm()
 	}
-
 	return r.PostFormValue("refresh_token")
 }
